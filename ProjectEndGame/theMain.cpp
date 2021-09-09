@@ -1970,7 +1970,7 @@ int main(void)
 
 		for (int i = 0; i < gCoordinatorVec.size(); i++)
 		{
-			if (gCoordinatorVec[i]->finishedShopping)
+			if (gCoordinatorVec[i]->finishedShopping == true)
 			{
 				gCoordinatorVec.erase(gCoordinatorVec.begin() + i);
 				g_vec_pGameObjects.erase(g_vec_pGameObjects.begin() + i);

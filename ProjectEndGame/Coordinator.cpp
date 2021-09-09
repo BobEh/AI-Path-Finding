@@ -418,11 +418,7 @@ void Coordinator::GoToBase()
 			pathSection++;
 		}
 		else
-		{			
-			currentCommand = "none";
-			currentNode = basePath.at(pathSection);
-			currentState = states::depositing;
-			pathSection = 0;
+		{
 			finishedShopping = true;
 		}
 	}
