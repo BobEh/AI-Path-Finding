@@ -59,66 +59,71 @@ void cPhysics::IntegrationStep(std::vector<iObject*>& vec_pGameObjects, float de
 
 			pCurObj->setPositionXYZ(pCurObj->getPositionXYZ() + pCurObj->getVelocity() * deltaTime);
 			//pCurObj->MoveInRelativeDirection(pCurObj->getPositionXYZ() + pCurObj->getVelocity() * deltaTime);
-			
+
 		}
 
-		//if (pCurObj->getVelocity().x > 0.0f)
-		//{
-		//	if (pCurObj->getAccel().x < 0.0f)
-		//		pCurObj->setAccel(glm::vec3(0.0f, pCurObj->getAccel().y, pCurObj->getAccel().z));
+		if (pCurObj->getFriendlyName() != "enemy1" && pCurObj->getFriendlyName() != "enemy2" && pCurObj->getFriendlyName() != "enemy3" && pCurObj->getFriendlyName() != "enemy4")
+		{
 
-		//	pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x - 0.1f, pCurObj->getAccel().y, pCurObj->getAccel().z));
-		//	pCurObj->setVelocity(glm::vec3(pCurObj->getVelocity().x - 0.1f, pCurObj->getVelocity().y, pCurObj->getVelocity().z));
-		//}
-		//if (pCurObj->getVelocity().y > 0.0f)
-		//{
-		//	if (pCurObj->getAccel().y < 0.0f)
-		//		pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, 0.0f, pCurObj->getAccel().z));
+			if (pCurObj->getVelocity().x > 0.0f)
+			{
+				//if (pCurObj->getAccel().x < 0.0f)
+					//pCurObj->setAccel(glm::vec3(0.0f, pCurObj->getAccel().y, pCurObj->getAccel().z));
 
-		//	pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, pCurObj->getAccel().y - 0.1f, pCurObj->getAccel().z));
-		//	pCurObj->setVelocity(glm::vec3(pCurObj->getVelocity().x, pCurObj->getVelocity().y - 0.1f, pCurObj->getVelocity().z));
-		//}
-		//if (pCurObj->getVelocity().z > 0.0f)
-		//{
-		//	if (pCurObj->getAccel().z < 0.0f)
-		//		pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, pCurObj->getAccel().y, 0.0f));
+				//pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x - 0.1f, pCurObj->getAccel().y, pCurObj->getAccel().z));
+				pCurObj->setVelocity(glm::vec3(pCurObj->getVelocity().x - 0.1f, pCurObj->getVelocity().y, pCurObj->getVelocity().z));
+			}
+			if (pCurObj->getVelocity().y > 0.0f)
+			{
+				//if (pCurObj->getAccel().y < 0.0f)
+					//pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, 0.0f, pCurObj->getAccel().z));
 
-		//	pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, pCurObj->getAccel().y, pCurObj->getAccel().z - 0.1f));
-		//	pCurObj->setVelocity(glm::vec3(pCurObj->getVelocity().x, pCurObj->getVelocity().y, pCurObj->getVelocity().z - 0.1f));
-		//}
+				//pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, pCurObj->getAccel().y - 0.1f, pCurObj->getAccel().z));
+				pCurObj->setVelocity(glm::vec3(pCurObj->getVelocity().x, pCurObj->getVelocity().y - 0.1f, pCurObj->getVelocity().z));
+			}
+			if (pCurObj->getVelocity().z > 0.0f)
+			{
+				//if (pCurObj->getAccel().z < 0.0f)
+					//pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, pCurObj->getAccel().y, 0.0f));
+
+				//pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, pCurObj->getAccel().y, pCurObj->getAccel().z - 0.1f));
+				pCurObj->setVelocity(glm::vec3(pCurObj->getVelocity().x, pCurObj->getVelocity().y, pCurObj->getVelocity().z - 0.1f));
+			}
 
 
-		//if (pCurObj->getVelocity().x < 0.0f)
-		//{
-		//	if (pCurObj->getAccel().x > 0.0f)
-		//	{
-		//		pCurObj->setAccel(glm::vec3(0.0f, pCurObj->getAccel().y, pCurObj->getAccel().z));
-		//		//pCurObj->setVelocity(glm::vec3(0.0f, pCurObj->getVelocity().y, pCurObj->getVelocity().z));
-		//	}
-		//	pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x + 0.1f, pCurObj->getAccel().y, pCurObj->getAccel().z));
-		//	pCurObj->setVelocity(glm::vec3(pCurObj->getVelocity().x + 0.1f, pCurObj->getVelocity().y, pCurObj->getVelocity().z));
-		//}
-		//if (pCurObj->getVelocity().y < 0.0f)
-		//{
-		//	if (pCurObj->getAccel().y > 0.0f)
-		//		pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, 0.0f, pCurObj->getAccel().z));
+			if (pCurObj->getVelocity().x < 0.0f)
+			{
+				if (pCurObj->getAccel().x > 0.0f)
+				{
+					//pCurObj->setAccel(glm::vec3(0.0f, pCurObj->getAccel().y, pCurObj->getAccel().z));
+					//pCurObj->setVelocity(glm::vec3(0.0f, pCurObj->getVelocity().y, pCurObj->getVelocity().z));
+				}
+				//pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x + 0.1f, pCurObj->getAccel().y, pCurObj->getAccel().z));
+				pCurObj->setVelocity(glm::vec3(pCurObj->getVelocity().x + 0.1f, pCurObj->getVelocity().y, pCurObj->getVelocity().z));
+			}
+			if (pCurObj->getVelocity().y < 0.0f)
+			{
+				//if (pCurObj->getAccel().y > 0.0f)
+					//pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, 0.0f, pCurObj->getAccel().z));
 
-		//	pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, pCurObj->getAccel().y + 0.1f, pCurObj->getAccel().z));
-		//	pCurObj->setVelocity(glm::vec3(pCurObj->getVelocity().x, pCurObj->getVelocity().y + 0.1f, pCurObj->getVelocity().z));
-		//}
-		//if (pCurObj->getVelocity().z < 0.0f)
-		//{
-		//	if (pCurObj->getAccel().z > 0.0f)
-		//		pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, pCurObj->getAccel().y, 0.0f));
+				//pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, pCurObj->getAccel().y + 0.1f, pCurObj->getAccel().z));
+				pCurObj->setVelocity(glm::vec3(pCurObj->getVelocity().x, pCurObj->getVelocity().y + 0.1f, pCurObj->getVelocity().z));
+			}
+			if (pCurObj->getVelocity().z < 0.0f)
+			{
+				//if (pCurObj->getAccel().z > 0.0f)
+					//pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, pCurObj->getAccel().y, 0.0f));
 
-		//	pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, pCurObj->getAccel().y, pCurObj->getAccel().z + 0.1f));
-		//	pCurObj->setVelocity(glm::vec3(pCurObj->getVelocity().x, pCurObj->getVelocity().y, pCurObj->getVelocity().z + 0.1f));
-		//}
+				//pCurObj->setAccel(glm::vec3(pCurObj->getAccel().x, pCurObj->getAccel().y, pCurObj->getAccel().z + 0.1f));
+				pCurObj->setVelocity(glm::vec3(pCurObj->getVelocity().x, pCurObj->getVelocity().y, pCurObj->getVelocity().z + 0.1f));
+			}
+		}
 
 	}//for (unsigned int index = 0;
 
 	return;
 }
+
 
 
 
@@ -307,6 +312,11 @@ void cPhysics::TestForCollisions(std::vector<iObject*>& vec_pGameObjects)
 				if (DoSphereSphereCollisionTest(pA, pB, collisionInfo))
 				{
 					vecCollisions.push_back(collisionInfo);
+					if (pA->getInfected() || pB->getInfected())
+					{
+						pA->setInfected(true);
+						pB->setInfected(true);
+					}
 				}
 			}
 			else if (pA->getPhysicsShapeType() == "SPHERE" && pB->getPhysicsShapeType() == "MESH")

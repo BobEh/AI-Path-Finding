@@ -30,6 +30,16 @@ bool cMeshObject::getIsTranspanrancy()
 	return this->isTranspanrancy;
 }
 
+bool cMeshObject::getInfected()
+{
+	return false;
+}
+
+std::string cMeshObject::getAnimationName()
+{
+	return this->animationName;
+}
+
 cSimpleAssimpSkinnedMesh* cMeshObject::getpSm()
 {
 	return this->pSM;
@@ -272,6 +282,15 @@ void cMeshObject::setTransprancyValue(float transprancyValue)
 void cMeshObject::setIsTranspanrancy(bool isTranspanrancy)
 {
 	this->isTranspanrancy = isTranspanrancy;
+}
+
+void cMeshObject::setInfected(bool status)
+{
+}
+
+void cMeshObject::setAnimationName(std::string name)
+{
+	this->animationName = name;
 }
 
 

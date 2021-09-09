@@ -29,6 +29,14 @@ bool cGameObject::getIsTranspanrancy()
 {
 	return this->isTranspanrancy;
 }
+bool cGameObject::getInfected()
+{
+	return this->infected;
+}
+std::string cGameObject::getAnimationName()
+{
+	return this->animationName;
+}
 unsigned int cGameObject::getFriendlyIDNumber()
 {
 	return this->_friendlyIDNumber;
@@ -290,6 +298,16 @@ void cGameObject::setTransprancyValue(float transprancyValue)
 void cGameObject::setIsTranspanrancy(bool isTranspanrancy)
 {
 	this->isTranspanrancy = isTranspanrancy;
+}
+
+void cGameObject::setInfected(bool status)
+{
+	this->infected = status;
+}
+
+void cGameObject::setAnimationName(std::string name)
+{
+	this->animationName = name;
 }
 
 

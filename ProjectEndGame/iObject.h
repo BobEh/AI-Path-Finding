@@ -44,8 +44,12 @@ public:
 	virtual float getTransprancyValue()=0;
 	virtual bool getIsTranspanrancy()=0;
 
+	virtual bool getInfected() = 0;
+
 	//leave this one ( don't need a setter )
 	virtual unsigned int getUniqueID(void) = 0;
+
+	virtual std::string getAnimationName() = 0;
 	//setters
 	virtual void setpSm(cSimpleAssimpSkinnedMesh*) = 0;
 	virtual void addTestPoint(glm::vec3) = 0;
@@ -80,4 +84,7 @@ public:
 
 	virtual void setTransprancyValue(float transprancyValue)=0;
 	virtual void setIsTranspanrancy(bool isTranspanrancy)=0;
+
+	virtual void setInfected(bool status) = 0;
+	virtual void setAnimationName(std::string name) = 0;
 };

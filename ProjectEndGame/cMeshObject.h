@@ -49,6 +49,9 @@ public:
 
 	float getTransprancyValue();
 	bool getIsTranspanrancy();
+
+	bool getInfected();
+	std::string getAnimationName();
 	
 	//setters
 	virtual void setpSm(cSimpleAssimpSkinnedMesh* thePSM);
@@ -85,6 +88,9 @@ public:
 	void setTransprancyValue(float transprancyValue);
 	void setIsTranspanrancy(bool isTranspanrancy);
 
+	void setInfected(bool status);
+	void setAnimationName(std::string name);
+
 private:
 	cSimpleAssimpSkinnedMesh* pSM;
 	glm::quat qRotation;
@@ -114,4 +120,7 @@ private:
 
 	std::string textures[NUMBEROFTEXTURES];
 	float textureRatio[NUMBEROFTEXTURES];
+
+	bool infected;
+	std::string animationName;
 };

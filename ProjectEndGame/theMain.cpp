@@ -44,7 +44,14 @@
 #include "Coordinator.h"
 #include "BMPImage.h"
 #include "ResourceManager.h"
-Coordinator* gCoordinator;
+
+#include "assets/imgui/imgui.h"
+#include "imgui_impl_opengl3.h"
+#include "imgui_impl_glfw.h"
+
+std::vector<Coordinator*> gCoordinatorVec;
+std::vector<int> g_vec_resourceNodeIDs;
+std::vector<int> g_vec_cashierIDs;
 AIManager* gAIManager;
 ResourceManager gResourceManager;
 bool showPath = false;
@@ -120,7 +127,7 @@ cLight* pCorner4Light = new cLight();
 
 float cameraLeftRight = 0.0f;
 
-glm::vec3 cameraEye = glm::vec3(0.0, 80.0, -280.0);
+glm::vec3 cameraEye = glm::vec3(20.0, 30.0, -380.0);
 glm::vec3 cameraTarget = glm::vec3(pMainLight->getPositionX(), pMainLight->getPositionY(), pMainLight->getPositionZ());
 glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -160,12 +167,24 @@ iObject* pFindObjectByFriendlyNameMap(std::string name);
 
 char GetColourCharacter(unsigned char r, unsigned char g, unsigned char b)
 {
- 	if (r == 255 && g == 0 && b == 0)		return 'r';
-	if (r == 0 && g == 255 && b == 0)		return 'g';
-	if (r == 0 && g == 0 && b == 255)	return 'b';
-	if (r == 255 && g == 255 && b == 255)	return 'w';
-	if (r == 255 && g == 255 && b == 0)	return 'y';
-	if (r == 0 && g == 0 && b == 0)		return '_';
+ 	if (r == 255 && g == 0 && b == 0) {
+		return 'r';
+	}
+	if (r == 0 && g == 255 && b == 0) {
+		return 'g';
+	}
+	if (r == 0 && g == 0 && b == 255) {
+		return 'b';
+	}
+	if (r == 255 && g == 255 && b == 255) {
+		return 'w';
+	}
+	if (r == 255 && g == 255 && b == 0) {
+		return 'y';
+	}
+	if (r == 0 && g == 0 && b == 0) {
+		return '_';
+	}
 	return 'x';
 }
 
@@ -292,7 +311,7 @@ void ProcessAsyncMouse(GLFWwindow* window)
 		// Mouse left (primary?) button pressed? 
 		// AND the mouse is inside the window...
 	if ((glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-		&& ::g_MouseIsInsideWindow)
+		&& ::g_MouseIsInsideWindow && isShiftDown(window))
 	{
 		// Mouse button is down so turn the camera
 		::g_pFlyCamera->Yaw_LeftRight(-::g_pFlyCamera->getDeltaMouseX() * MOUSE_SENSITIVITY);
@@ -414,38 +433,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 	if (!isShiftKeyDownByAlone(mods) && !isCtrlKeyDownByAlone(mods))
 	{
-		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-		{
-			gCoordinator->currentState = Coordinator::states::findResource;
-		}
-		if (key == GLFW_KEY_1 && action == GLFW_PRESS)
-		{
-			gCoordinator->SetFormation("circle");
-		}
-		if (key == GLFW_KEY_2 && action == GLFW_PRESS)
-		{
-			gCoordinator->SetFormation("v");
-		}
-		if (key == GLFW_KEY_3 && action == GLFW_PRESS)
-		{
-			gCoordinator->SetFormation("square");
-		}
-		if (key == GLFW_KEY_4 && action == GLFW_PRESS)
-		{
-			gCoordinator->SetFormation("line");
-		}
-		if (key == GLFW_KEY_5 && action == GLFW_PRESS)
-		{
-			gCoordinator->SetFormation("rows");
-		}
-		if (key == GLFW_KEY_6 && action == GLFW_PRESS)
-		{
-			gCoordinator->SetCommand("flock");
-		}
-		if (key == GLFW_KEY_7 && action == GLFW_PRESS)
-		{
-			gCoordinator->SetCommand("none");
-		}
+		
 		if (key == GLFW_KEY_8 && action == GLFW_PRESS)
 		{
 			//for (int i = 0; i < 6; i++)
@@ -455,11 +443,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 			//gCoordinator->SetTarget(glm::vec3(250.0f, 0.0f, 250.0f));
 			//gCoordinator->SetCommand("seek");
 			//gCoordinator->CreatePath();
-			gCoordinator->SetCommand("followPath");
+			//gCoordinator->SetCommand("followPath");
 		}
 		if (key == GLFW_KEY_0 && action == GLFW_PRESS)
 		{
-			gCoordinator->SetCommand("none");
+			//gCoordinator->SetCommand("none");
 		}
 		// Move the camera (A & D for left and right, along the x axis)
 		if (key == GLFW_KEY_A)
@@ -737,20 +725,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		//}
 
 		// Move the camera (W & S for towards and away, along the z axis)
-		if (key == GLFW_KEY_S)
-		{
-			//if (pEagle->getAccel().z > -6.0f)
-			//	pEagle->setAccel(glm::vec3(0.0f, 0.0f, pEagle->getAccel().z - MOVESPEED));		// Move the camera -0.01f units
-			//pEagle->setVelocity(glm::vec3(0.0f, 0.0f, -25.0f));
-			currentAnimationName = "Idle";
-		}
-		if (key == GLFW_KEY_W)
-		{
-			//if (pEagle->getAccel().z < 6.0f)
-			//	pEagle->setAccel(glm::vec3(0.0f, 0.0f, pEagle->getAccel().z + MOVESPEED));		// Move the camera +0.01f units
-			//pEagle->setVelocity(glm::vec3(0.0f, 0.0f, 25.0f));
-			currentAnimationName = "Walk-Slow";
-		}
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		{
 			if (pEagle->getAccel().z < 6.0f)
@@ -1046,6 +1020,16 @@ T randInRange(T min, T max)
 	return static_cast<T>(value);
 };
 
+struct CollisionBuffer {
+public:
+	int ID;
+	float bufferTime;
+};
+
+std::vector<CollisionBuffer*> collisions;
+
+float HACK_FrameTime = 0.0f;
+
 int main(void)
 {
 	//std::ifstream gameData(gameDataLocation);
@@ -1103,6 +1087,14 @@ int main(void)
 	cDebugRenderer* pDebugRenderer = new cDebugRenderer();
 	pDebugRenderer->initialize();
 
+	//Setup IMGUI
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init((char*)glGetString(GL_NUM_SHADING_LANGUAGE_VERSIONS));
+
 	//cMesh safePartsMesh;
 	//pTheModelLoader->LoadPlyModel("assets/models/Parts_Safe_from_Asteroids_xyz_n.ply", safePartsMesh);
 
@@ -1112,9 +1104,16 @@ int main(void)
 	std::string assimpErrorString = "";
 
 	cMesh sharkMesh;
-	if (!pTheModelLoader->LoadPlyModel("assets/models/shark_xyz_n_uv.ply", sharkMesh))
+	if (!pTheModelLoader->LoadPlyModel("assets/models/shark_xyz_n_uv_test.ply", sharkMesh))
 	{
 		std::cout << "Error: couldn't find the mountain range ply." << std::endl;
+	}
+
+	cMesh personMesh;
+	std::string errorStringPersonMesh = "";
+	if (!pTheModelLoader->LoadPlyModel("assets/models/RPG-Character(FBX2013).ply", personMesh))
+	{
+		std::cout << "Error: couldn't load the person model" << std::endl;
 	}
 
 	cMesh floorMesh;
@@ -1172,6 +1171,9 @@ int main(void)
 	sModelDrawInfo sharkMeshInfo;
 	pTheVAOManager->LoadModelIntoVAO("shark", sharkMesh, sharkMeshInfo, shaderProgID);
 
+	sModelDrawInfo personMeshInfo;
+	pTheVAOManager->LoadModelIntoVAO("person", personMesh, personMeshInfo, shaderProgID);
+
 
 	// now texture
 	// Texture stuff
@@ -1204,6 +1206,8 @@ int main(void)
 	::g_pTextureManager->Create2DTextureFromBMPFile("yellow.bmp", true);
 
 	::g_pTextureManager->Create2DTextureFromBMPFile("black.bmp", true);
+
+	::g_pTextureManager->Create2DTextureFromBMPFile("purple.bmp", true);
 
 	//Cube Maps loaded here
 	::g_pTextureManager->SetBasePath("assets/textures/cubemaps/");
@@ -1242,26 +1246,6 @@ int main(void)
 	}
 
 	gAIManager = new AIManager();
-
-	gCoordinator = new Coordinator();
-
-	//Coordinator sphere
-	iObject* pCoordinatorSphere = pFactory->CreateObject("sphere");
-	pCoordinatorSphere->setMeshName("sphere");
-	pCoordinatorSphere->setFriendlyName("coordinatorSphere");	// We use to search 
-	pCoordinatorSphere->setPositionXYZ(glm::vec3(0.0f, 0.0f, 0.0f));
-	pCoordinatorSphere->setRotationXYZ(glm::vec3(0.0f, 0.0f, 0.0f));
-	pCoordinatorSphere->setScale(0.01f);
-	pCoordinatorSphere->setObjectColourRGBA(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-	//pCoordinatorSphere->setDebugColour(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-	pCoordinatorSphere->setVelocity(glm::vec3(0.0f, 0.0f, 0.0f));
-	pCoordinatorSphere->setAccel(glm::vec3(0.0f, 0.0f, 0.0f));
-	pCoordinatorSphere->set_SPHERE_radius(1.0f);
-	pCoordinatorSphere->setInverseMass(1.0f);
-	pCoordinatorSphere->setIsVisible(false);
-	pCoordinatorSphere->setIsWireframe(false);
-	//gCoordinator->SetCoordinatorObject(pCoordinatorSphere);
-	//::g_vec_pGameObjects.push_back(pCoordinatorSphere);
 
 	// Sphere and cube
 	iObject* pSphere = pFactory->CreateObject("sphere");
@@ -1315,30 +1299,6 @@ int main(void)
 	pFloor->setTextureRatio(1, 1);
 	pFloor->setTransprancyValue(1.0f);
 	::g_vec_pEnvironmentObjects.push_back(pFloor);
-
-	for (int i = 0; i < 12; i++)
-	{
-		iObject* pShark = pFactory->CreateObject("sphere");
-		pShark->setMeshName("shark");
-		std::string theName = "shark" + i;
-		pShark->setFriendlyName(theName);	// We use to search 
-		pShark->setPositionXYZ(glm::vec3(randInRange(-300.0f,300.0f), 13.0f, randInRange(-300.0f, 300.0f)));
-		//pShark->setRotationXYZ(glm::vec3(0.0f, glm::radians(randInRange(-180.0f, 180.0f)), 0.0f));
-		pShark->setRotationXYZ(glm::vec3(0.0f, 0.0f, 0.0f));
-		pShark->setVelocity(glm::vec3(0.0f, 0.0f, 0.0f));
-		pShark->setScale(1.0f);
-		pShark->setObjectColourRGBA(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-		pShark->setAccel(glm::vec3(0.0f, 0.0f, 0.0f));
-		pShark->setInverseMass(1.0f);
-		pShark->set_SPHERE_radius(5.0f);
-		pShark->setIsVisible(true);
-		pShark->setIsWireframe(false);
-		pShark->setTexture("StoneTex_1024.bmp", 1);
-		pShark->setTextureRatio(1, 1);
-		pShark->setTransprancyValue(1.0f);
-		//gCoordinator->AddVehicle(pShark);
-		//g_vec_pGameObjects.push_back(pShark);
-	}
 	
 	// Will be moved placed around the scene
 	iObject* pDebugSphere = pFactory->CreateObject("sphere");
@@ -1417,17 +1377,6 @@ int main(void)
 	pMainLight1->setInnerSpot(std::stof(mainLight1Node.child("SpotInnerAngle").child_value()));
 	pMainLight1->setOuterSpot(std::stof(mainLight1Node.child("SpotOuterAngle").child_value()));
 
-	//pMainLight1->setNodeName("SharkSpotLight");
-	//pMainLight1->setPositionX(30.0f);
-	//pMainLight1->setPositionY(50.0f);
-	//pMainLight1->setPositionZ(std::stof(mainLight1Node.child("PositionZ").child_value()));
-	//pMainLight1->setPositionXYZ(glm::vec3(std::stof(mainLight1Node.child("PositionX").child_value()), std::stof(mainLight1Node.child("PositionY").child_value()), std::stof(mainLight1Node.child("PositionZ").child_value())));
-	//pMainLight1->setConstAtten(std::stof(mainLight1Node.child("ConstAtten").child_value()));
-	//pMainLight1->setLinearAtten(std::stof(mainLight1Node.child("LinearAtten").child_value()));
-	//pMainLight1->setQuadraticAtten(std::stof(mainLight1Node.child("QuadraticAtten").child_value()));
-	//pMainLight1->setInnerSpot(std::stof(mainLight1Node.child("SpotInnerAngle").child_value()));
-	//pMainLight1->setOuterSpot(std::stof(mainLight1Node.child("SpotOuterAngle").child_value()));
-
 	pLightsVec.push_back(pMainLight);
 	pLightsVec.push_back(pMainLight1);
 
@@ -1465,24 +1414,30 @@ int main(void)
 	unsigned long imageWidth = bmp->GetImageWidth();
 	unsigned long imageHeight = bmp->GetImageHeight();
 
-	int index = 0;
+	int index = -1;
 	float size = 10.0f;
 	unsigned short r, g, b;
 	unsigned int nodeID = 1;
+	unsigned int entranceNodeID = 50;
+	unsigned int exitNodeID = 51;
 
 	int normalWeight = 10;
 	int diagonalWeight = 14;
 
 	graph = new Graph();
 
-	gCoordinator->SetGraph(graph);
-
 	for (unsigned long x = 0; x < imageWidth; x++) {
 		for (unsigned long y = 0; y < imageHeight; y++) {
 			nodeID = (x * imageWidth) + y;
 			//nodeID++;
-			//printf("%c", GetColourCharacter(data[index++], data[index++], data[index++]));
-			char currentNode = GetColourCharacter(data[index++], data[index++], data[index++]);
+			//std::cout << data[index++] << std::endl;
+			/*std::cout << data[index + 1] << data[index + 2] << data[index + 3];
+			printf("%c", GetColourCharacter(data[index++], data[index++], data[index++]));*/
+			int iR = index + 3;
+			int iG = index + 2;
+			int iB = index + 1;
+			char currentNode = GetColourCharacter(data[iR], data[iG], data[iB]);
+			index += 3;
 			if (currentNode == '_')
 			{
 				iObject* pCube = pFactory->CreateObject("mesh");
@@ -1539,11 +1494,12 @@ int main(void)
 				pCube->setIsWireframe(false);
 				pCube->setInverseMass(0.0f);			// Sphere won't move
 				pCube->setIsVisible(false);
-				pCube->setTexture("red.bmp", 1);
+				pCube->setTexture("StoneTex_1024.bmp", 1);
 				pCube->setTextureRatio(1, 1);
 				pCube->setTransprancyValue(1.0f);
 				g_vec_pFloorObjects.push_back(pCube);
 				graph->CreateNode(nodeID, Vertex(pCube->getPositionXYZ().x, pCube->getPositionXYZ().y, pCube->getPositionXYZ().z), "red", true, false);
+				g_vec_resourceNodeIDs.push_back(nodeID);
 			}
 			if (currentNode == 'g')
 			{
@@ -1568,22 +1524,7 @@ int main(void)
 				{
 					if (graph->nodes.at(i)->id == nodeID)
 					{
-						gCoordinator->rootNode = graph->nodes.at(i);
-						iObject* pGatherer = pFactory->CreateObject("sphere");
-						pGatherer->setMeshName("shark");
-						pGatherer->setFriendlyName("gatherer");
-						pGatherer->setPositionXYZ(glm::vec3(graph->nodes.at(i)->position.x, graph->nodes.at(i)->position.y + 10.0f, graph->nodes.at(i)->position.z));
-						pGatherer->setRotationXYZ(glm::vec3(0.0f, 0.0f, 0.0f));
-						pGatherer->setObjectColourRGBA(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-						pGatherer->setScale(0.1f);
-						pGatherer->setIsWireframe(false);
-						pGatherer->setInverseMass(1.0f);
-						pGatherer->setIsVisible(true);
-						pGatherer->setTexture("StoneTex_1024.bmp", 1);
-						pGatherer->setTextureRatio(1, 1);
-						pGatherer->setTransprancyValue(1.0f);
-						gCoordinator->SetCoordinatorObject(pGatherer);
-						g_vec_pGameObjects.push_back(pGatherer);
+						entranceNodeID = nodeID;
 					}
 				}
 				//continue;
@@ -1607,6 +1548,7 @@ int main(void)
 				pCube->setTransprancyValue(1.0f);
 				g_vec_pFloorObjects.push_back(pCube);
 				graph->CreateNode(nodeID, Vertex(pCube->getPositionXYZ().x, pCube->getPositionXYZ().y, pCube->getPositionXYZ().z), "yellow", false, false);
+				g_vec_cashierIDs.push_back(nodeID);
 				//continue;
 			}
 			if (currentNode == 'b')
@@ -1621,7 +1563,7 @@ int main(void)
 				//	pCube->objectColourRGBA = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
 				pCube->setDebugColour(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 				pCube->setIsWireframe(false);
-				pCube->setInverseMass(0.0f);			// Sphere won't move
+				pCube->setInverseMass(0.0f);
 				pCube->setIsVisible(false);
 				pCube->setTexture("blue.bmp", 1);
 				pCube->setTextureRatio(1, 1);
@@ -1632,7 +1574,7 @@ int main(void)
 				{
 					if (graph->nodes.at(i)->id == nodeID)
 					{
-						gCoordinator->baseNode = graph->nodes.at(i);
+						exitNodeID = graph->nodes.at(i)->id;
 					}
 				}
 			}
@@ -1916,8 +1858,13 @@ int main(void)
 		}
 	}
 
-	gCoordinator->currentState = Coordinator::states::idle;
-	gCoordinator->currentNode = gCoordinator->rootNode;
+	float newCustomer = 0.0f;
+	int totalInfections = 0;
+	int totalCustomers = 0;
+	int capacityLimit = 100;
+	float traffic = 15.0f;
+	float infectionPercent = 10.0f;
+	float infectionRange = 5.0f;
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -1925,13 +1872,13 @@ int main(void)
 		//Draw everything to the external frame buffer
 		// (I get the frame buffer ID, and use that)
 		glBindFramebuffer(GL_FRAMEBUFFER, pTheFBO->ID);
-		
-		//if (pMainCharacter->getVelocity().z < 1.0f)
-		//{
-		//	currentAnimationName = "Idle";
-		//}
 
 		pTheFBO->clearBuffers(true, true);
+
+		//New Frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 
 		// set the passNumber to 0
 		GLint passNumber_UniLoc = glGetUniformLocation(shaderProgID, "passNumber");
@@ -1950,6 +1897,126 @@ int main(void)
 		}
 
 		avgDeltaTimeThingy.addValue(deltaTime);
+
+		newCustomer += deltaTime;
+
+		if (newCustomer > traffic && g_vec_pGameObjects.size() <= capacityLimit)
+		{
+			Coordinator* newCoordinator = new Coordinator();
+			newCoordinator->SetGraph(graph);
+			newCoordinator->rootNode = graph->nodes.at(entranceNodeID);
+			iObject* pMainCharacter = pFactory->CreateObject("sphere");
+			cSimpleAssimpSkinnedMesh* theSkinnedMesh = new cSimpleAssimpSkinnedMesh();
+			pMainCharacter->setpSm(theSkinnedMesh);
+			pMainCharacter->getpSm()->LoadMeshFromFile("mainCharacter", "assets/modelsFBX/RPG-Character(FBX2013).FBX");
+
+			sModelDrawInfo* mainCharacterMeshInfo = pMainCharacter->getpSm()->CreateMeshObjectFromCurrentModel();
+
+			pMainCharacter->getpSm()->LoadMeshAnimation("Walk", "assets/modelsFBX/Walking.fbx");
+			pMainCharacter->getpSm()->LoadMeshAnimation("Idle", "assets/modelsFBX/RPG-Character_Unarmed-Idle(FBX2013).FBX");
+			pMainCharacter->setAnimationName("Walk");
+			pMainCharacter->setMeshName("mainCharacter");
+			pMainCharacter->setFriendlyName("mainCharacter");	// We use to search 
+			pMainCharacter->setPositionXYZ(glm::vec3(graph->nodes.at(entranceNodeID)->position.x, graph->nodes.at(entranceNodeID)->position.y + 10.0f, graph->nodes.at(entranceNodeID)->position.z));
+			pMainCharacter->setRotationXYZ(glm::vec3(0.0f, glm::radians(-90.0f), 0.0f));
+			pMainCharacter->setScale(0.06f);
+			//pMainCharacter->setObjectColourRGBA(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+			pMainCharacter->setDebugColour(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+			pMainCharacter->setVelocity(glm::vec3(0.0f, 0.0f, 0.0f));
+			pMainCharacter->setAccel(glm::vec3(0.0f, 0.0f, 0.0f));
+			pMainCharacter->setInverseMass(1.0f);
+			pMainCharacter->setIsVisible(true);
+			pMainCharacter->setIsWireframe(false);
+			pMainCharacter->setTexture("StoneTex_1024.bmp", 0);
+			pMainCharacter->setTexture("grassTexture_512.bmp", 1);
+			pMainCharacter->setTexture("sandTexture_1024.bmp", 2);
+			pMainCharacter->setTextureRatio(1, 1);
+			pMainCharacter->setTransprancyValue(1.0f);
+			::g_vec_pGameObjects.push_back(pMainCharacter);
+			if (mainCharacterMeshInfo)
+			{
+				std::cout << mainCharacterMeshInfo->numberOfVertices << " vertices" << std::endl;
+				std::cout << mainCharacterMeshInfo->numberOfTriangles << " triangles" << std::endl;
+				std::cout << mainCharacterMeshInfo->numberOfIndices << " indices" << std::endl;
+
+				pTheVAOManager->LoadModelDrawInfoIntoVAO(*mainCharacterMeshInfo, shaderProgID);
+			}
+			newCoordinator->SetCoordinatorObject(pMainCharacter);
+			newCoordinator->SetInfected(randInRange(0.f, 100.f) < infectionPercent);
+			pMainCharacter->setInfected(newCoordinator->GetInfected());
+			g_vec_pGameObjects.push_back(pMainCharacter);
+
+			newCoordinator->currentState = Coordinator::states::findResource;
+			newCoordinator->currentNode = newCoordinator->rootNode;
+			newCoordinator->baseNode = graph->nodes.at(exitNodeID);
+
+			for (int c = 0; c < randInRange(5, 10); c++)
+			{
+				newCoordinator->groceryList.push_back(g_vec_resourceNodeIDs[randInRange(0, (int)g_vec_resourceNodeIDs.size() - 1)]);
+			}
+			newCoordinator->finishedShopping = false;
+
+			newCoordinator->laneID = g_vec_cashierIDs.at(randInRange(0, (int)g_vec_cashierIDs.size() - 1));
+			
+			gCoordinatorVec.push_back(newCoordinator);
+
+			newCustomer = 0.0f;
+			totalCustomers++;
+			if (pMainCharacter->getInfected())
+			{
+				totalInfections++;
+			}
+		}
+
+		for (int i = 0; i < gCoordinatorVec.size(); i++)
+		{
+			if (gCoordinatorVec[i]->finishedShopping)
+			{
+				gCoordinatorVec.erase(gCoordinatorVec.begin() + i);
+				g_vec_pGameObjects.erase(g_vec_pGameObjects.begin() + i);
+			}
+		}
+
+		for (int i = 0; i < g_vec_pGameObjects.size(); i++)
+		{
+			if (g_vec_pGameObjects[i]->getInfected() == true)
+			{
+				g_vec_pGameObjects[i]->setTexture("purple.bmp", 1);
+			}
+		}
+
+		for (int i = 0; i < g_vec_pGameObjects.size(); i++)
+		{
+			iObject* currObj = g_vec_pGameObjects[i];
+			for (int c = 0; c < g_vec_pGameObjects.size(); c++)
+			{
+				iObject* testObj = g_vec_pGameObjects[c];
+				if (currObj->getUniqueID() == testObj->getUniqueID())
+				{
+					break;
+				}
+				if (distance(currObj->getPositionXYZ(), testObj->getPositionXYZ()) < 12.0f)
+				{
+					if (currObj->getInfected() || testObj->getInfected())
+					{
+						currObj->setInfected(true);
+						testObj->setInfected(true);
+					}
+				}
+			}
+		}
+
+		for (int i = 0; i < collisions.size(); i++)
+		{
+			if (collisions[i]->bufferTime < 3.0f)
+			{
+				collisions[i]->bufferTime += deltaTime;
+			}
+			else
+			{
+				collisions.erase(collisions.begin() + i);
+			}
+		}
 
 		waterOffset.x += 0.1f * deltaTime;
 		waterOffset.y += 0.017f * deltaTime;
@@ -2055,25 +2122,23 @@ int main(void)
 
 		}//for (int index...
 
-		pPhsyics->IntegrationStep(g_vec_pGameObjects, 0.03f);
-		gCoordinator->update(deltaTime);
-
-		//test for collisions
 		for (int i = 0; i < g_vec_pGameObjects.size(); i++)
 		{
-			for (int j = 0; j < g_vec_pGameObjects.size(); j++)
+			if ((fabs(g_vec_pGameObjects.at(i)->getVelocity().z) + fabs(g_vec_pGameObjects.at(i)->getVelocity().y) + fabs(g_vec_pGameObjects.at(i)->getVelocity().z)) > 0.0f)
 			{
-				if (i == j)
-				{
-					continue;
-				}
-				glm::vec3 iLocation = g_vec_pGameObjects.at(i)->getPositionXYZ();
-				glm::vec3 jLocation = g_vec_pGameObjects.at(j)->getPositionXYZ();
-
-				float collisionTest = glm::distance(iLocation, jLocation);
+				g_vec_pGameObjects.at(i)->setAnimationName("Walk");
 			}
+			else
+			{
+				g_vec_pGameObjects.at(i)->setAnimationName("Idle");
+			}
+		}		
+
+		pPhsyics->IntegrationStep(g_vec_pGameObjects, 0.03f);
+		for (int i = 0; i < gCoordinatorVec.size(); i++)
+		{
+			gCoordinatorVec[i]->update(deltaTime);
 		}
-		pPhsyics->TestForCollisions(::g_vec_pGameObjects);
 
 		if (bLightDebugSheresOn)
 		{
@@ -2232,14 +2297,14 @@ int main(void)
 		// set pass number back to 0 to render the rest of the scene
 		glUniform1i(passNumber_UniLoc, 0);
 
-		for (int index = 0; index != gCoordinator->theGraph->nodes.size(); index++)
+		for (int i = 0; i < gCoordinatorVec.size(); i++)
 		{
-			if (gCoordinator->theGraph->nodes.at(index)->hasResource)
+			if (gCoordinatorVec[i]->hasResource)
 			{
 				iObject* pResource = pFactory->CreateObject("mesh");
 				pResource->setMeshName("sphere");
 				pResource->setFriendlyName("resource");
-				pResource->setPositionXYZ(glm::vec3(gCoordinator->theGraph->nodes.at(index)->position.x, gCoordinator->theGraph->nodes.at(index)->position.y + 20.0f, gCoordinator->theGraph->nodes.at(index)->position.z));
+				pResource->setPositionXYZ(glm::vec3(gCoordinatorVec[i]->theCoordinator->getPositionXYZ().x, gCoordinatorVec[i]->theCoordinator->getPositionXYZ().y + 20.0f, gCoordinatorVec[i]->theCoordinator->getPositionXYZ().z));
 				pResource->setRotationXYZ(glm::vec3(glm::radians(90.0f), 0.0f, 0.0f));
 				pResource->setScale(1.0f);
 				pResource->setDebugColour(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
@@ -2251,25 +2316,7 @@ int main(void)
 				pResource->setTransprancyValue(1.0f);
 				g_vec_pResourceObjects.push_back(pResource);
 			}
-		}
-
-		if (gCoordinator->hasResource)
-		{
-			iObject* pResource = pFactory->CreateObject("mesh");
-			pResource->setMeshName("sphere");
-			pResource->setFriendlyName("resource");
-			pResource->setPositionXYZ(glm::vec3(gCoordinator->theCoordinator->getPositionXYZ().x, gCoordinator->theCoordinator->getPositionXYZ().y + 20.0f, gCoordinator->theCoordinator->getPositionXYZ().z));
-			pResource->setRotationXYZ(glm::vec3(glm::radians(90.0f), 0.0f, 0.0f));
-			pResource->setScale(1.0f);
-			pResource->setDebugColour(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-			pResource->setIsWireframe(false);
-			pResource->setInverseMass(0.0f);			// Sphere won't move
-			pResource->setIsVisible(false);
-			pResource->setTexture("red.bmp", 1);
-			pResource->setTextureRatio(1, 1);
-			pResource->setTransprancyValue(1.0f);
-			g_vec_pResourceObjects.push_back(pResource);
-		}
+		}			
 
 		for (int index = 0; index != g_vec_pResourceObjects.size(); index++)
 		{
@@ -2323,72 +2370,35 @@ int main(void)
 
 		}//for (int index...
 
-		std::string currentCommand = gCoordinator->GetCurrentCommand();
-		if (showPath)
 		{
-			Node* currentPoint = gCoordinator->GetCurrentPathPoint();
+			ImGui::Text("Total Customers: %i", totalCustomers);
+			ImGui::Text("Customers Infected: %i", totalInfections);
+			ImGui::DragFloat("Seconds between customers", &traffic, 1.0f, 2.0f, 20.0f);
+			ImGui::DragInt("Capacity Limit", &capacityLimit, 1, 10, 100);
+			ImGui::DragFloat("Infection Likelihood", &infectionPercent, 1.0f, 0.0f, 100.0f);
+			ImGui::DragFloat("Infection Range", &infectionRange, 1.0f, 1.0f, 20.0f);
+		}
 
-			glm::mat4 pathPointModel = glm::mat4(1.0f);
-
-			std::vector<Node*> currentPath = gCoordinator->GetCurrentPath();
-
-			for (int i = 0; i < currentPath.size(); i++)
-			{
-				if (i != gCoordinator->GetCurrentPathSection())
-				{
-					iObject* pathPoint = pFactory->CreateObject("mesh");
-					pathPoint->setMeshName("sphere");
-					pathPoint->setFriendlyName("debug_sphere");
-					pathPoint->setPositionXYZ(glm::vec3(currentPath.at(i)->position.x, currentPath.at(i)->position.y + 10.0f, currentPath.at(i)->position.z));
-					pathPoint->setRotationXYZ(glm::vec3(0.0f, 0.0f, 0.0f));
-					pathPoint->setScale(1.0f);
-					//	pathPoint->objectColourRGBA = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-					pathPoint->setDebugColour(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-					pathPoint->setIsWireframe(true);
-					pathPoint->setInverseMass(0.0f);			// Sphere won't move
-					pathPoint->setIsVisible(true);
-
-					DrawObject(pathPointModel, pathPoint, shaderProgID, pTheVAOManager);
-				}
-			}
-
-			iObject* pathPoint = pFactory->CreateObject("mesh");
-			pathPoint->setMeshName("sphere");
-			pathPoint->setFriendlyName("debug_sphere");
-			pathPoint->setPositionXYZ(glm::vec3(currentPoint->position.x, currentPoint->position.y + 10.0f, currentPoint->position.z));
-			pathPoint->setRotationXYZ(glm::vec3(0.0f, 0.0f, 0.0f));
-			pathPoint->setScale(1.0f);
-			//	pathPoint->objectColourRGBA = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-			pathPoint->setDebugColour(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-			pathPoint->setIsWireframe(true);
-			pathPoint->setInverseMass(0.0f);			// Sphere won't move
-			pathPoint->setIsVisible(true);
-
-			DrawObject(pathPointModel, pathPoint, shaderProgID, pTheVAOManager);
-
-			iObject* coordPoint = pFactory->CreateObject("mesh");
-			coordPoint->setMeshName("sphere");
-			coordPoint->setFriendlyName("debug_sphere");
-			coordPoint->setPositionXYZ(glm::vec3(gCoordinator->GetCoordinatorObject()->getPositionXYZ().x, gCoordinator->GetCoordinatorObject()->getPositionXYZ().y + 10.0f, gCoordinator->GetCoordinatorObject()->getPositionXYZ().z));
-			coordPoint->setRotationXYZ(glm::vec3(0.0f, 0.0f, 0.0f));
-			coordPoint->setScale(1.0f);
-			//	pathPoint->objectColourRGBA = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-			coordPoint->setDebugColour(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-			coordPoint->setIsWireframe(true);
-			coordPoint->setInverseMass(0.0f);			// Sphere won't move
-			coordPoint->setIsVisible(true);
-
-			DrawObject(pathPointModel, coordPoint, shaderProgID, pTheVAOManager);
+		if (HACK_FrameTime > 13.0f)
+		{
+			HACK_FrameTime = 0.0f;
 		}
 		
 		glm::mat4 skyMatModel2 = glm::mat4(1.0f);
 
 		DrawObject(skyMatModel2, pSkyBoxSphere, shaderProgID, pTheVAOManager);
 
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}// main loop
 
+	//Shutdown
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
@@ -2467,8 +2477,6 @@ void SetUpTextureBindingsForObject(
 }
 
 static glm::vec2 g_OffsetHACK = glm::vec2(0.0f, 0.0f);
-
-float HACK_FrameTime = 0.0f;
 
 void DrawObject(glm::mat4 m, iObject* pCurrentObject, GLint shaderProgID, cVAOManager* pVAOManager)
 {
@@ -2684,36 +2692,43 @@ void DrawObject(glm::mat4 m, iObject* pCurrentObject, GLint shaderProgID, cVAOMa
 
 		// This loads the bone transforms from the animation model
 		pCurrentObject->getpSm()->BoneTransform(HACK_FrameTime,	// 0.0f // Frame time
-			currentAnimationName,
+			pCurrentObject->getAnimationName(),
 			vecFinalTransformation,
 			vecObjectBoneTransformation,
 			vecOffsets);
 
 		// Wait until all threads are done updating.
 
-		HACK_FrameTime += 0.005f;
+		if (pCurrentObject->getAnimationName() == "Walk")
+		{
+			HACK_FrameTime += 0.003f;
+		}
+		else
+		{
+			HACK_FrameTime += 0.008f;
+		}
 
-		{// Forward kinematic stuff
+		//{// Forward kinematic stuff
 
-			// "Bone" location is at the origin
-			glm::vec4 boneLocation = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		//	// "Bone" location is at the origin
+		//	glm::vec4 boneLocation = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
-			// bone #22 is "B_R_Hand" in this model
-			glm::mat4 matSpecificBone = vecFinalTransformation[9];
+		//	// bone #22 is "B_R_Hand" in this model
+		//	glm::mat4 matSpecificBone = vecFinalTransformation[9];
 
-			// Transformed into "model" space where that bone is.
-			::g_HACK_vec3_BoneLocationFK = matSpecificBone * boneLocation;
+		//	// Transformed into "model" space where that bone is.
+		//	::g_HACK_vec3_BoneLocationFK = matSpecificBone * boneLocation;
 
-			// If it's in world space
-			::g_HACK_vec3_BoneLocationFK = m * glm::vec4(g_HACK_vec3_BoneLocationFK, 1.0f);
+		//	// If it's in world space
+		//	::g_HACK_vec3_BoneLocationFK = m * glm::vec4(g_HACK_vec3_BoneLocationFK, 1.0f);
 
-			if (currentAnimationName == "Walk" || currentAnimationName == "Walk-Slow")
-			{
-				glm::vec3 setPosition = glm::vec3(0.0f, 0.0f, g_HACK_vec3_BoneLocationFK.z);
+		//	if (pCurrentObject->getAnimationName() == "Walk" || currentAnimationName == "Walk-Slow")
+		//	{
+		//		glm::vec3 setPosition = glm::vec3(g_HACK_vec3_BoneLocationFK.x, 10.0f, g_HACK_vec3_BoneLocationFK.z);
 
-				pCurrentObject->setPositionXYZ(setPosition);
-			}
-		}// Forward kinematic 
+		//		pCurrentObject->setPositionXYZ(setPosition);
+		//	}
+		//}// Forward kinematic 
 
 
 			// Copy all 100 bones to the shader

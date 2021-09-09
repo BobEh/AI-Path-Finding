@@ -178,7 +178,7 @@ bool BMPImage::LoadBMPFromFile(const std::string& filename)
 	//gResourceManager.ReadData(bmpFile, (char*)&bmpInfoHeader, sizeof(bmpInfoHeader));
 
 	// Check if info is correct
-	//bmpInfoHeader.print();
+	bmpInfoHeader.print();
 
 	// Check if valid bitmap
 	if (bmpInfoHeader.numColorPlanes != 1

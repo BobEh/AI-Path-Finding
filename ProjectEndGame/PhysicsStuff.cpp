@@ -1,12 +1,12 @@
 // PhysicsStuff.cpp
 #include <vector>
-#include "cGameObject.h"
+#include "iObject.h"
 #include <iostream>
 #include "PhysicsStuff.h"
 
 //extern bool g_BallCollided;
 
-void PhysicsUpdate(std::vector<cGameObject*>& vec_pGameObjects, float deltaTime)
+void PhysicsUpdate(std::vector<iObject*>& vec_pGameObjects, float deltaTime)
 {
 
 	// 9.81 
@@ -19,7 +19,7 @@ void PhysicsUpdate(std::vector<cGameObject*>& vec_pGameObjects, float deltaTime)
 	{
 
 
-		cGameObject* pCurObj = vec_pGameObjects[index];
+		iObject* pCurObj = vec_pGameObjects[index];
 
 		if (pCurObj->getInverseMass() != 0.0f)
 		{
@@ -31,13 +31,13 @@ void PhysicsUpdate(std::vector<cGameObject*>& vec_pGameObjects, float deltaTime)
 			//pCurObj->setAccel(gravity);
 
 
-			pCurObj->setVelocity(pCurObj->getVelocity() + pCurObj->getAccel() * deltaTime);
+			//pCurObj->setVelocity(pCurObj->getVelocity() + pCurObj->getAccel() * deltaTime);
 	//		// Or you can do this...
 	//		CurObj.velocity += CurObj.accel * deltaTime;
 
 			//NewPosition = Posistion + ( Vx * DeltaTime )
 
-			pCurObj->setPositionXYZ(pCurObj->getPositionXYZ() + pCurObj->getVelocity() * deltaTime);
+			//pCurObj->setPositionXYZ(pCurObj->getPositionXYZ() + pCurObj->getVelocity() * deltaTime);
 
 
 			float groundPlane = 0.0f;

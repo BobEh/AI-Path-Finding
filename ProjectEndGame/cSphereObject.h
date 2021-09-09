@@ -51,6 +51,11 @@ public:
 
 	float getTransprancyValue();
 	bool getIsTranspanrancy();
+
+	bool getInfected();
+
+	std::string getAnimationName();
+
 	//setters
 	virtual void setpSm(cSimpleAssimpSkinnedMesh* thePSM);
 	void setMeshName(std::string name);
@@ -86,6 +91,8 @@ public:
 	void setTransprancyValue(float transprancyValue);
 	void setIsTranspanrancy(bool isTranspanrancy);
 
+	void setInfected(bool status);
+	void setAnimationName(std::string name);
 
 private:
 	cSimpleAssimpSkinnedMesh* pSM;
@@ -123,4 +130,7 @@ private:
 
 	float transprancyValue;
 	bool isTranspanrancy;
+
+	bool infected;
+	std::string animationName;
 };

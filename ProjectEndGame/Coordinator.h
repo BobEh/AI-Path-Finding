@@ -6,6 +6,7 @@
 #include <stack>
 #include <queue>
 #include <list>
+#include <vector>
 
 #include "iObject.h"
 #include "Behaviour.h"
@@ -21,7 +22,9 @@ public:
 		gathering,
 		depositing,
 		findResource,
-		findBase
+		findBase,
+		findCashier,
+		checkout,
 	};
 	Coordinator(void);
 	~Coordinator(void);
@@ -59,13 +62,21 @@ public:
 	Node* currentResourceNode;
 	Node* baseNode;
 	Node* goalNode;
+	std::vector<int> groceryList;
+	int laneID;
 	bool hasResource;
+	bool finishedShopping;
+
+	bool GetInfected();
+	void SetInfected(bool status);
 
 private:
 	void Seek();
 	void MakeFormation();
 	void FindResource();
 	void FindBase();
+	void FindCashier();
+	void Checkout();
 	void Idle();
 	void Deposit(float dt);
 	void Gather(float dt);
@@ -86,8 +97,11 @@ private:
 	std::vector<glm::vec3> rowsOffsets;
 	std::vector<Node*> resourcePath;
 	std::vector<Node*> basePath;
+	std::vector<Node*> cashierPath;
 	std::string currentCommand;
 	glm::vec3 currentTarget;
+
+	bool infected;
 
 	int pathSection;
 

@@ -30,6 +30,16 @@ bool cSphereObject::getIsTranspanrancy()
 	return this->isTranspanrancy;
 }
 
+bool cSphereObject::getInfected()
+{
+	return this->infected;
+}
+
+std::string cSphereObject::getAnimationName()
+{
+	return this->animationName;
+}
+
 cSimpleAssimpSkinnedMesh* cSphereObject::getpSm()
 {
 	return this->pSM;
@@ -241,7 +251,7 @@ cSphereObject::cSphereObject()
 	this->_velocity = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->_accel = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->_inverseMass = 0.0f;	// Infinite mass
-	this->_physicsShapeType = "UNKNOWN";
+	this->_physicsShapeType = "SPHERE";
 
 	// Set the unique ID
 	// Take the value of the static int, 
@@ -300,6 +310,16 @@ void cSphereObject::setTransprancyValue(float transprancyValue)
 void cSphereObject::setIsTranspanrancy(bool isTranspanrancy)
 {
 	this->isTranspanrancy = isTranspanrancy;
+}
+
+void cSphereObject::setInfected(bool status)
+{
+	this->infected = status;
+}
+
+void cSphereObject::setAnimationName(std::string name)
+{
+	this->animationName = name;
 }
 
 

@@ -12,8 +12,13 @@ bool IsNodeInOpenList(vector<Node*> openList, Node* child)
 }
 
 
-Node* Dijkstra(Node* rootNode, Graph* graph)
+Node* Dijkstra(Node* rootNode, Graph* graph, std::vector<int> &groceryList)
 {
+	if (groceryList.size() == 0)
+	{
+		return NULL;
+	}
+
 	graph->ResetGraph();
 
 	rootNode->visited = true;
@@ -49,10 +54,11 @@ Node* Dijkstra(Node* rootNode, Graph* graph)
 		}
 		closedList.push_back(currNode);
 
-		cout << currNode->id << endl;
+		std::cout << currNode->id << endl;
 		currNode->visited = true;
-		if (currNode->hasResource)
+		if (currNode->hasResource && currNode->id == groceryList[groceryList.size() - 1])
 		{
+			groceryList.pop_back();
 			return currNode;
 		}
 
@@ -125,9 +131,9 @@ Node* AStar(Node* rootNode, Graph* graph, Node* goal)
 		}
 		closedList.push_back(currNode);
 
-		cout << currNode->id << endl;
+		std::cout << currNode->id << endl;
 		currNode->visited = true;
-		if (currNode->hasBase)
+		if (currNode->id == goal->id)
 		{
 			return currNode;
 		}
@@ -237,6 +243,16 @@ void Coordinator::SetTarget(glm::vec3 target)
 	this->currentTarget = target;
 }
 
+bool Coordinator::GetInfected()
+{
+	return this->infected;
+}
+
+void Coordinator::SetInfected(bool status)
+{
+	this->infected = status;
+}
+
 void Coordinator::Seek()
 {
 	/*calculates the desired velocity */
@@ -325,14 +341,62 @@ void Coordinator::MakeFormation()
 	}
 }
 
+void Coordinator::Checkout()
+{
+	glm::vec3 desiredVelocity = glm::vec3(this->cashierPath.at(pathSection)->position.x, this->cashierPath.at(pathSection)->position.y + 10.0f, this->cashierPath.at(pathSection)->position.z) - theCoordinator->getPositionXYZ();
+
+	/* get the distance from target */
+	float dist = glm::distance(theCoordinator->getPositionXYZ(), glm::vec3(this->cashierPath.at(pathSection)->position.x, this->cashierPath.at(pathSection)->position.y + 10.0f, this->cashierPath.at(pathSection)->position.z));
+
+	glm::normalize(desiredVelocity);
+
+	float maxVelocity = 30.0f;
+	float arrived = 2.0f;
+
+	/*is the game object within the radius around the target */
+	if (dist < arrived)
+	{
+		/* game object is approaching the target and slows down*/
+		//desiredVelocity = desiredVelocity * maxVelocity * (dist / slowingRadius);
+		//this->currentCommand = "none";
+		if (pathSection < cashierPath.size() - 1)
+		{
+			pathSection++;
+		}
+		else
+		{
+			currentCommand = "none";
+			currentNode = cashierPath.at(pathSection);
+			currentState = states::depositing;
+			pathSection = 0;
+		}
+	}
+	else
+	{
+		/* target is far away from game object*/
+		desiredVelocity *= maxVelocity;
+	}
+
+	/*calculate the steering force */
+	glm::vec3 steer = desiredVelocity - theCoordinator->getVelocity();
+
+	/* add steering force to current velocity*/
+	theCoordinator->setVelocity(steer * 0.3f);
+
+	if (glm::length(theCoordinator->getVelocity()) > maxVelocity)
+	{
+		theCoordinator->setVelocity(glm::normalize(theCoordinator->getVelocity()) * maxVelocity);
+	}
+}
+
 void Coordinator::GoToBase()
 {
 	/*calculates the desired velocity */
 	/*Seek uses target position - current position*/
 	/*Flee uses current position - target position*/
-	std::cout << "Current path point: " << std::endl << "X: " << this->basePath.at(pathSection)->position.x << ", Y: " << this->basePath.at(pathSection)->position.y << ", Z: " << this->basePath.at(pathSection)->position.z << std::endl;
-	std::cout << "Path section: " << pathSection << std::endl;
-	std::cout << "Current gatherer position: " << std::endl << "X: " << this->theCoordinator->getPositionXYZ().x << ", Y: " << this->theCoordinator->getPositionXYZ().y << ", Z: " << this->theCoordinator->getPositionXYZ().z << std::endl;
+	//std::cout << "Current path point: " << std::endl << "X: " << this->basePath.at(pathSection)->position.x << ", Y: " << this->basePath.at(pathSection)->position.y << ", Z: " << this->basePath.at(pathSection)->position.z << std::endl;
+	//std::cout << "Path section: " << pathSection << std::endl;
+	//std::cout << "Current gatherer position: " << std::endl << "X: " << this->theCoordinator->getPositionXYZ().x << ", Y: " << this->theCoordinator->getPositionXYZ().y << ", Z: " << this->theCoordinator->getPositionXYZ().z << std::endl;
 	glm::vec3 desiredVelocity = glm::vec3(this->basePath.at(pathSection)->position.x, this->basePath.at(pathSection)->position.y + 10.0f, this->basePath.at(pathSection)->position.z) - theCoordinator->getPositionXYZ();
 
 	/* get the distance from target */
@@ -359,6 +423,7 @@ void Coordinator::GoToBase()
 			currentNode = basePath.at(pathSection);
 			currentState = states::depositing;
 			pathSection = 0;
+			finishedShopping = true;
 		}
 	}
 	else
@@ -384,17 +449,17 @@ void Coordinator::FindResource()
 	/*calculates the desired velocity */
 	/*Seek uses target position - current position*/
 	/*Flee uses current position - target position*/
-	std::cout << "Current path point: " << std::endl << "X: " << this->resourcePath.at(pathSection)->position.x << ", Y: " << this->resourcePath.at(pathSection)->position.y << ", Z: " << this->resourcePath.at(pathSection)->position.z << std::endl;
+	/*std::cout << "Current path point: " << std::endl << "X: " << this->resourcePath.at(pathSection)->position.x << ", Y: " << this->resourcePath.at(pathSection)->position.y << ", Z: " << this->resourcePath.at(pathSection)->position.z << std::endl;
 	std::cout << "Path section: " << pathSection << std::endl;
-	std::cout << "Current gatherer position: " << std::endl << "X: " << this->theCoordinator->getPositionXYZ().x << ", Y: " << this->theCoordinator->getPositionXYZ().y << ", Z: " << this->theCoordinator->getPositionXYZ().z << std::endl;
-	glm::vec3 desiredVelocity = glm::vec3(this->resourcePath.at(pathSection)->position.x, this->resourcePath.at(pathSection)->position.y + 10.0f, this->resourcePath.at(pathSection)->position.z) - theCoordinator->getPositionXYZ();
+	std::cout << "Current gatherer position: " << std::endl << "X: " << this->theCoordinator->getPositionXYZ().x << ", Y: " << this->theCoordinator->getPositionXYZ().y << ", Z: " << this->theCoordinator->getPositionXYZ().z << std::endl;*/
+	glm::vec3 desiredVelocity = glm::vec3(this->resourcePath.at(pathSection)->position.x, this->resourcePath.at(pathSection)->position.y + 10.0f, this->resourcePath.at(pathSection)->position.z) - theCoordinator->getPositionXYZ() + glm::vec3(1.f, 1.f, 1.f);
 
 	/* get the distance from target */
 	float dist = glm::distance(theCoordinator->getPositionXYZ(), glm::vec3(this->resourcePath.at(pathSection)->position.x, this->resourcePath.at(pathSection)->position.y + 10.0f, this->resourcePath.at(pathSection)->position.z));
 
 	glm::normalize(desiredVelocity);
 
-	float maxVelocity = 30.0f;
+	float maxVelocity = 20.0f;
 	float arrived = 2.0f;
 
 	/*is the game object within the radius around the target */
@@ -410,7 +475,6 @@ void Coordinator::FindResource()
 		else
 		{			
 			currentCommand = "none";
-			resourcePath.at(pathSection)->hasResource = false;
 			currentNode = resourcePath.at(pathSection);
 			currentState = states::gathering;
 			pathSection = 0;
@@ -721,8 +785,7 @@ void Coordinator::Deposit(float dt)
 	else
 	{
 		depositTime = 0.0f;
-		currentState = states::findResource;
-		hasResource = false;
+		currentState = states::findBase;
 	}
 }
 
@@ -736,7 +799,14 @@ void Coordinator::Gather(float dt)
 	else
 	{
 		gatherTime = 0.0f;
-		currentState = states::findBase;
+		if (groceryList.size() > 0)
+		{
+			currentState = states::findResource;
+		}
+		else
+		{
+			currentState = states::findCashier;
+		}
 		hasResource = true;
 	}
 }
@@ -745,10 +815,16 @@ void Coordinator::FindNewResource()
 {
 	Node* resourceNode;
 
-	resourceNode = Dijkstra(currentNode, theGraph);
+	if (groceryList.size() == 0)
+	{
+		this->currentState = states::findCashier;
+		return;
+	}
+
+	resourceNode = Dijkstra(currentNode, theGraph, groceryList);
 	if (resourceNode == nullptr)
 	{
-		this->currentState = states::idle;
+		this->currentState = states::findCashier;
 		return;
 	}
 	currentResourceNode = resourceNode;
@@ -769,12 +845,53 @@ void Coordinator::FindNewResource()
 	std::reverse(resourcePath.begin(), resourcePath.end());
 	if (currentResourceNode == nullptr)
 	{
-		currentState = states::idle;
+		currentState = states::findCashier;
 	}
 	else
 	{
 		currentState = states::search;
 	}	
+}
+
+void Coordinator::FindCashier()
+{
+	Node* aStarRootNode;
+	if (this->currentNode != nullptr)
+	{
+		aStarRootNode = currentNode;
+	}
+	else
+	{
+		aStarRootNode = rootNode;
+	}
+
+	if (aStarRootNode == nullptr)
+	{
+		return;
+	}
+	Node* cashierNode = nullptr;
+	for (int i = 0; i < theGraph->nodes.size(); i++)
+	{
+		if (theGraph->nodes[i]->id == laneID)
+		{
+			cashierNode = theGraph->nodes[i];
+		}
+	}
+	goalNode = AStar(aStarRootNode, theGraph, cashierNode);
+
+	std::vector<glm::vec3> cashierPathPoints;
+	Node* currentAStarNode = goalNode;
+	if (cashierPath.size() > 0)
+	{
+		cashierPath.clear();
+	}
+	while (currentAStarNode->parent != NULL)
+	{
+		cashierPath.push_back(currentAStarNode);
+		currentAStarNode = currentAStarNode->parent;
+	}
+	std::reverse(cashierPath.begin(), cashierPath.end());
+	currentState = states::checkout;
 }
 
 void Coordinator::FindBase()
@@ -839,5 +956,13 @@ void Coordinator::update(float dt)
 	else if (this->currentState == states::gathering)
 	{
 		Gather(dt);
+	}
+	else if (this->currentState == states::findCashier)
+	{
+		FindCashier();
+	}
+	else if (this->currentState == states::checkout)
+	{
+		Checkout();
 	}
 }
